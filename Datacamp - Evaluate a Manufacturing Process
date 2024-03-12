@@ -1,0 +1,24 @@
+-- Write your query here
+WITH f_q AS (
+	SELECT OPERATOR
+		, ROW_NUMBER() OVER(PARTITION BY operator ORDER BY item_no) AS row_number
+		, height
+		, AVG(Height) OVER(ORDER BY item_no ROWS BETWEEN 4 PRECEDING AND CURRENT ROW) AS avg_height 
+		, STDDEV(Height) OVER( ORDER BY item_no ROWS BETWEEN 4 PRECEDING AND CURRENT ROW) AS stddev_height			
+FROM manufacturing_parts
+GROUP BY operator, item_no, height
+),
+
+s_q AS(
+	SELECT f_q.*
+		, (avg_height + (3 * (stddev_height / SQRT(5)))) AS ucl
+		, (avg_height - (3 * (stddev_height / SQRT(5)))) AS lcl
+FROM f_q
+)
+SELECT s_q.*
+	, CASE 
+		WHEN height NOT BETWEEN lcl AND ucl THEN TRUE
+		ELSE FALSE
+	  END AS alert
+FROM s_q
+WHERE row_number >= 5;
