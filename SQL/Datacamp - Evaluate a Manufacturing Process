@@ -1,4 +1,4 @@
--- Write your query here
+>-- Write your query here
 WITH f_q AS (
 	SELECT OPERATOR
 		, ROW_NUMBER() OVER(PARTITION BY operator ORDER BY item_no) AS row_number
